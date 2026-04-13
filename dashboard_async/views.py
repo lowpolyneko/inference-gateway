@@ -943,12 +943,11 @@ def get_model_box(request, model: str, window: str = "24h"):
 
 
 @router.get("/analytics/health")
-def get_health_status(request, cluster: str = "sophia", refresh: int = 0):
+async def get_health_status(request, cluster: str = "sophia", refresh: int = 0):
     """Proxy health info so the browser doesn't need a bearer token.
     Combines qstat job data (for Sophia/Polaris) or Metis API status with configured endpoints to mark offline models.
     """
     try:
-        from asgiref.sync import async_to_sync
 
         from resource_server_async.clusters.cluster import GetJobsResponse, Jobs
         from resource_server_async.utils import (
@@ -963,9 +962,6 @@ def get_health_status(request, cluster: str = "sophia", refresh: int = 0):
             if cached_payload:
                 return JsonResponse(cached_payload)
 
-        # Create mock auth object to pass to get_jobs
-        from resource_server_async.models import User
-
         mock_auth_data = {
             "id": "ALCF-dashboard-id",
             "name": "ALCF-dashboard-name",
@@ -973,16 +969,14 @@ def get_health_status(request, cluster: str = "sophia", refresh: int = 0):
             "idp_id": "ALCF-dashboard-idp-id",
             "idp_name": "ALCF-dashboard-idp-name",
         }
-        mock_auth = User(**mock_auth_data)
+        mock_auth = AsyncUser(**mock_auth_data)
 
         # Get the jobs response from the cluster wrapper
-        wrapper_response: ClusterWrapperResponse = async_to_sync(get_cluster_wrapper)(
-            cluster
-        )
+        wrapper_response: ClusterWrapperResponse = await get_cluster_wrapper(cluster)
         if wrapper_response.cluster:
-            jobs_response: GetJobsResponse = async_to_sync(
-                wrapper_response.cluster.get_jobs
-            )(mock_auth)
+            jobs_response: GetJobsResponse = await wrapper_response.cluster.get_jobs(
+                mock_auth
+            )
             err: str = jobs_response.error_message
             cluster_status: Jobs = jobs_response.jobs
         else:
@@ -992,13 +986,6 @@ def get_health_status(request, cluster: str = "sophia", refresh: int = 0):
         # Empty (or cached values) if error occured
         if err or not cluster_status:
             return JsonResponse({"error": str(err)}, status=500)
-
-        # Get all models listed for the targeted cluster
-        configured_models = set(
-            AsyncEndpoint.objects.filter(cluster=cluster).values_list(
-                "model", flat=True
-            )
-        )
 
         # Fill model status for what is reported in the cluster status (/jobs URL)
         items = []
@@ -1023,8 +1010,13 @@ def get_health_status(request, cluster: str = "sophia", refresh: int = 0):
         # Gather the list of models that are already present in the items list
         present_models = {i["model"] for i in items}
 
+        # Get all models listed for the targeted cluster
+        configured_models = AsyncEndpoint.objects.filter(
+            Q(cluster=cluster) & ~Q(model__in=present_models)
+        ).values_list("model", flat=True)
+
         # Add offline models to the list
-        for model in sorted(configured_models - present_models):
+        async for model in configured_models:
             items.append(
                 {
                     "model": model,
