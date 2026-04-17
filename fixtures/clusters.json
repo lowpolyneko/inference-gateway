@@ -24,7 +24,7 @@
         "pk": 2,
         "fields": {
             "cluster_name": "your-other-cluster",
-            "cluster_adapter": "resource_server_async.clusters.custom_cluster.CustomCluster",
+            "cluster_adapter": "resource_server_async.clusters.metis.MetisCluster",
             "frameworks": [
                 "api"
             ],
