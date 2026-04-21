@@ -1,5 +1,4 @@
 import os
-import multiprocessing
 
 """gunicorn ASGI server configuration."""
 
