@@ -35,7 +35,7 @@ threads = 1
 worker_connections = 1000  # Maximum number of simultaneous clients per worker
 
 # Worker lifecycle settings
-preload_app = True  # Preload application code before forking workers
+preload_app = False  # Do not preload so that you can keep main process when reloading
 daemon = False  # Run in foreground (managed by systemd)
 
 # Log directory based on environment
