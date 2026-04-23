@@ -161,6 +161,7 @@ INSTALLED_APPS = [
     "resource_server",
     "resource_server_async",
     "drf_spectacular",
+    "dashboard_async",
     # Configuration checks (mostly for making sure auth guards are in place)
     "inference_gateway.apps.AuthCheckConfig",
 ]
@@ -188,7 +189,7 @@ SPECTACULAR_SETTINGS = {
     # OTHER SETTINGS
 }
 
-ROOT_URLCONF = "inference_gateway.urls"
+ROOT_URLCONF = "dashboard_async.urls"
 
 TEMPLATES = [
     {
@@ -206,7 +207,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = "inference_gateway.wsgi.application"
+WSGI_APPLICATION = "dashboard_async.wsgi.application"
 
 
 # Database
