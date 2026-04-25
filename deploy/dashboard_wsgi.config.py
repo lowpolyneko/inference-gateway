@@ -1,12 +1,12 @@
 import os
 
-"""Inference Gateway Gunicorn ASGI server configuration."""
+"""Dashboard Gunicorn WSGI server configuration."""
 
 # Determine if we're in production or development
 environment = os.getenv("ENV", "production")
 
 # Localhost port to communicate between Nginx and Gunicorn
-bind = "0.0.0.0:7000"
+bind = "0.0.0.0:7001"
 
 # Maximum response time above which Gunicorn sends a timeout error
 timeout = 60
@@ -27,7 +27,7 @@ max_requests_jitter = 300
 backlog = 2048
 
 # Type of workers
-worker_class = "resource_server_async.uvicorn_workers.InferenceUvicornWorker"
+# worker_class = "resource_server_async.uvicorn_workers.InferenceUvicornWorker"
 
 # Worker configuration
 workers = 5
@@ -41,15 +41,15 @@ daemon = False  # Run in foreground (managed by systemd)
 # Log directory based on environment
 if environment == "development":
     # Development log files in the current directory
-    accesslog = "./logs/backend_gateway.access.log"
-    errorlog = "./logs/backend_gateway.error.log"
-    bind = "127.0.0.1:8000"
+    accesslog = "./logs/backend_dashboard.access.log"
+    errorlog = "./logs/backend_dashboard.error.log"
+    bind = "127.0.0.1:8001"
     # More verbose logging in development
     loglevel = "debug"
 else:
     # Production log files in a local directory
-    accesslog = "/var/log/inference-service/backend_gateway.access.log"
-    errorlog = "/var/log/inference-service/backend_gateway.error.log"
+    accesslog = "/var/log/inference-service/backend_dashboard.access.log"
+    errorlog = "/var/log/inference-service/backend_dashboard.error.log"
     # Less verbose logging in production
     loglevel = "debug"
 
@@ -64,7 +64,7 @@ enable_stdio_inheritance = True
 # statsd_prefix = 'gunicorn'
 
 # Process naming for better monitoring
-proc_name = "inference-gateway"
+proc_name = "inference-dashboard"
 
 # Error handling
 max_retries = 3
