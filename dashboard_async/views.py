@@ -1248,7 +1248,7 @@ async def get_batch_logs_rt(request, page: int = 0, per_page: int = 100):
 
 
 @router.get("/analytics/query-logs")
-def query_logs_custom(request):
+async def query_logs_custom(request):
     """Custom log query builder with flexible filters."""
     try:
         from django.db import connection
@@ -1352,12 +1352,16 @@ def query_logs_custom(request):
         """
 
         # Execute query
-        with connection.cursor() as cursor:
-            # Set timezone first
-            cursor.execute("SET TIME ZONE %s", [tzname])
-            # Then execute the main query
-            cursor.execute(query, params + [rows])
-            result = cursor.fetchone()
+        @sync_to_async
+        def _get_row():
+            with connection.cursor() as cursor:
+                # Set timezone first
+                cursor.execute("SET TIME ZONE %s", [tzname])
+                # Then execute the main query
+                cursor.execute(query, params + [rows])
+                return cursor.fetchone()
+
+        result = await _get_row()
 
         # Return JSON array or empty array if no results
         data = result[0] if result and result[0] else []
