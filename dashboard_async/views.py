@@ -1052,8 +1052,14 @@ async def get_requests_per_user(request, cluster: str = "all"):
         if cached is not None:
             return cached
 
+        requests_per_user_set = AsyncAccessLog.objects.select_related("user")
+        if cluster and cluster.lower() != "all":
+            requests_per_user_set = requests_per_user_set.select_related(
+                "request_log"
+            ).filter(request_log__cluster__iexact=cluster)
+
         requests_per_user_set = (
-            AsyncAccessLog.objects.values(
+            requests_per_user_set.values(
                 name=F("user__name"), username=F("user__username")
             )
             .annotate(
@@ -1069,11 +1075,6 @@ async def get_requests_per_user(request, cluster: str = "all"):
             )
             .order_by("-total")
         )
-
-        if cluster and cluster.lower() != "all":
-            requests_per_user_set = requests_per_user_set.filter(
-                request_log__cluster__iexact=cluster
-            )
 
         result = [r async for r in requests_per_user_set]
 
