@@ -1,6 +1,6 @@
 import os
 
-"""gunicorn ASGI server configuration."""
+"""Inference Gateway Gunicorn ASGI server configuration."""
 
 # Determine if we're in production or development
 environment = os.getenv("ENV", "production")
